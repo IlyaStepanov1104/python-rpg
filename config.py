@@ -1,0 +1,1 @@
+FIGHT_LIMIT = 100
