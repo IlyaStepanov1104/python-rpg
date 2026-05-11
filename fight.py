@@ -5,6 +5,10 @@ from logger import logger
 
 
 def player_turn(hero, enemy):
+    """
+    Returns:
+        bool: Сбежал ли с боя
+    """
     print(f"\n=== Твой ход ===")
     # TODO: вынести в logger
     print(f"{hero.name}: HP {hero.hp}/{hero.max_hp} | Инвентарь: {hero.inventory}")
@@ -14,6 +18,8 @@ def player_turn(hero, enemy):
     if hero.inventory.items:
         print("[2] Использовать предмет")
         
+    print("[3] Выход из боя")
+    
     choice = input("Выбор: ").strip()
     
     if choice == "2" and hero.inventory.items:
@@ -25,9 +31,13 @@ def player_turn(hero, enemy):
         # TODO: только лечение
         hero.inventory.use_item(idx, hero)
         logger.log_use_item(hero, item)
+    elif choice == '3':
+        return True
     else:
         damage = hero.attack(enemy)
         logger.log_attack(hero, enemy, damage)
+    
+    return False
 
 
 def fight(player: Character, enemy: Character):
@@ -35,9 +45,10 @@ def fight(player: Character, enemy: Character):
     print(f"{player} vs {enemy}\n")
         
     for _ in range(FIGHT_LIMIT):
-        player_turn(player, enemy)
+        is_player_exit = player_turn(player, enemy)
         
-        # TODO: HW - Если пользователь сбежал, то return
+        if is_player_exit:
+            return None
         
         if not enemy.is_alive():
             logger.log_winner(player)
