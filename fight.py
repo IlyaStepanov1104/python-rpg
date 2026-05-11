@@ -1,17 +1,22 @@
-from random import randint
+from random import random, choice
 from characters import Character
-from config import FIGHT_LIMIT
+from config import DROPS, FIGHT_LIMIT, GOLD_REWARD, XP_REWARD
 from logger import logger
 
+
+def generate_drop():
+    if random() < 0.7:
+        return choice(DROPS)
+    return None
 
 def player_turn(hero, enemy):
     """
     Returns:
         bool: Сбежал ли с боя
     """
+    
     print(f"\n=== Твой ход ===")
-    # TODO: вынести в logger
-    print(f"{hero.name}: HP {hero.hp}/{hero.max_hp} | Инвентарь: {hero.inventory}")
+    print(f"{hero.name}: HP {hero.hp}/{hero.max_hp} | Gold: {hero.gold} | Инвентарь: {hero.inventory}")
     print(f"{enemy.name}: HP {enemy.hp}/{enemy.max_hp}")
     print()
     print("[1] Атаковать")
@@ -28,9 +33,12 @@ def player_turn(hero, enemy):
         
         idx = int(input("Какой предмет: "))
         item = hero.inventory.items[idx]
-        # TODO: только лечение
-        hero.inventory.use_item(idx, hero)
-        logger.log_use_item(hero, item)
+        if item.style == 'heal':
+            hero.inventory.use_item(idx, hero)
+            logger.log_use_heal_item(hero, item)
+        elif item.style == 'damage':
+            hero.inventory.use_item(idx, enemy)
+            logger.log_use_damage_item(hero, enemy, item)
     elif choice == '3':
         return True
     else:
@@ -48,10 +56,17 @@ def fight(player: Character, enemy: Character):
         is_player_exit = player_turn(player, enemy)
         
         if is_player_exit:
+            logger.log_exit(player)
             return None
-        
+
         if not enemy.is_alive():
             logger.log_winner(player)
+            player.gold += GOLD_REWARD
+            player.gain_xp(XP_REWARD)
+            drop = generate_drop()
+            if drop:
+                player.inventory.add_item(drop)
+                logger.log_drop(drop)
             return player
         
         damage = enemy.attack(player)
